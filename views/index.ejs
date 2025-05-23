@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .tool-list {
+            list-style: none;
+            padding: 0;
+        }
+        .tool-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            padding: 15px;
+        }
+        .tool-item h2 {
+            margin-top: 0;
+        }
+        .tool-item p {
+            white-space: pre-wrap; /* Respect newlines in preview */
+        }
+        .add-tool-button {
+            display: inline-block;
+            background-color: #0275d8;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .add-tool-button:hover {
+            background-color: #025aa5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1><%= title %></h1>
+            <a href="/cart" class="button button-secondary">Cart (<%= cartItemCount %>)</a>
+        </div>
+        <a href="/new" class="button button-primary" style="margin-bottom: 20px;">Add New Tool</a>
+
+        <% if (tools && tools.length > 0) { %>
+            <ul class="tool-list">
+                <% tools.forEach(tool => { %>
+                    <li class="tool-item">
+                        <h2><a href="/tool/<%= tool.id %>"><%= tool.name %></a></h2>
+                        <p class="description-preview"><%= tool.preview %></p>
+                        <div class="actions-bar" style="margin-top: 10px; border-top: none; padding-top: 0;">
+                            <% if (cart.includes(tool.id)) { %>
+                                <form action="/cart/remove/<%= tool.id %>" method="POST" style="display: inline;">
+                                    <button type="submit" class="button button-danger">Remove from Cart</button>
+                                </form>
+                            <% } else { %>
+                                <form action="/cart/add/<%= tool.id %>" method="POST" style="display: inline;">
+                                    <button type="submit" class="button button-primary">Add to Cart</button>
+                                </form>
+                            <% } %>
+                        </div>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } else { %>
+            <p>No tools found. <a href="/new" class="button button-link">Add one!</a></p>
+        <% } %>
+    </div>
+
+</body>
+</html> 

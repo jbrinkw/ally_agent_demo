@@ -1,0 +1,228 @@
+body {
+    font-family: sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+    line-height: 1.6; /* Added for better readability */
+}
+
+h1, h2, h3 { /* Applied base styling to all heading levels */
+    color: #333;
+    margin-bottom: 0.5em;
+}
+
+h1 {
+    border-bottom: 2px solid #eee; /* Added a subtle border */
+    padding-bottom: 0.3em;
+    margin-bottom: 1em;
+}
+
+/* Form Styles */
+form div {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"],
+textarea {
+    width: 100%;
+    padding: 10px; /* Increased padding */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1em; /* Ensure consistent font size */
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px; /* Minimum height for textareas */
+}
+
+/* Button Styles */
+.button, button, input[type="submit"] { /* Generic button class */
+    display: inline-block;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none; /* For <a> tags styled as buttons */
+    font-size: 1em;
+    margin-right: 5px; /* Spacing for multiple buttons */
+}
+
+.button-primary, button[type="submit"] {
+    background-color: #007bff; /* Bootstrap primary blue */
+    color: white;
+}
+.button-primary:hover, button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+.button-secondary {
+    background-color: #6c757d; /* Bootstrap secondary gray */
+    color: white;
+}
+.button-secondary:hover {
+    background-color: #545b62;
+}
+
+.button-warning {
+    background-color: #ffc107; /* Bootstrap warning yellow */
+    color: #212529; /* Dark text for yellow bg */
+}
+.button-warning:hover {
+    background-color: #e0a800;
+}
+
+.button-danger {
+    background-color: #dc3545; /* Bootstrap danger red */
+    color: white;
+}
+.button-danger:hover {
+    background-color: #b02a37;
+}
+
+/* Link styled as button for "Cancel" or "Back" */
+.button-link {
+    background-color: #f8f9fa; /* Light gray */
+    color: #007bff;
+    border: 1px solid #ddd;
+}
+.button-link:hover {
+    background-color: #e2e6ea;
+    text-decoration: none;
+}
+
+/* Tool List Styles (from index.ejs) */
+.tool-list {
+    list-style: none;
+    padding: 0;
+}
+
+.tool-item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    padding: 20px; /* Increased padding */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Added subtle shadow */
+}
+
+.tool-item h2 {
+    margin-top: 0;
+    font-size: 1.5em; /* Larger name */
+}
+.tool-item h2 a {
+    text-decoration: none;
+    color: #007bff;
+}
+.tool-item h2 a:hover {
+    text-decoration: underline;
+    color: #0056b3;
+}
+
+.tool-item .description-preview { /* Class for description preview */
+    white-space: pre-wrap;
+    color: #555;
+    margin-top: 0.5em;
+}
+
+/* Add Tool Button (from index.ejs) - using generic button styles now */
+/* .add-tool-button is replaced by .button-primary */
+
+
+/* Tool Detail Styles (from tool.ejs) */
+.tool-detail-container { /* Renamed for clarity */
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 25px; /* Increased padding */
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tool-detail-container h1 { /* Already styled by global h1 */
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.tool-detail-container h2 { /* Specific for sections like Description, Code */
+    font-size: 1.3em; /* Slightly larger */
+    color: #444; /* Darker gray */
+    margin-top: 25px;
+    margin-bottom: 8px;
+    border-bottom: 1px dashed #eee; /* Subtle separator for sections */
+    padding-bottom: 5px;
+}
+
+.tool-detail-container p, .tool-detail-container pre {
+    white-space: pre-wrap;
+    background-color: #fdfdfd; /* Slightly off-white */
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    margin-bottom: 15px; /* Spacing below paragraphs/pre blocks */
+}
+
+.tool-detail-container p {
+    font-family: sans-serif;
+    line-height: 1.7; /* Increased line height for readability */
+}
+.tool-detail-container pre {
+    font-family: 'Courier New', Courier, monospace; /* Common monospace font stack */
+    font-size: 0.95em; /* Slightly smaller for code */
+    overflow-x: auto; /* Allow horizontal scrolling for long code lines */
+}
+
+
+/* Actions Bar (from tool.ejs) */
+.actions-bar { /* Renamed for clarity */
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Vertically align items */
+}
+
+.actions-bar form { /* Ensure form takes minimal space */
+    display: inline-block;
+    margin-right: 5px;
+}
+
+/* General container for better layout */
+.container {
+    max-width: 960px; /* Limit width for larger screens */
+    margin: 0 auto; /* Center the content */
+    padding: 0 15px; /* Add some padding on the sides */
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    body {
+        margin: 10px;
+    }
+    input[type="text"],
+    textarea,
+    .button {
+        font-size: 16px; /* Easier to tap on mobile */
+    }
+    .actions-bar {
+        flex-direction: column; /* Stack buttons vertically on small screens */
+        align-items: stretch; /* Make buttons full width */
+    }
+    .actions-bar .button, .actions-bar form {
+        margin-right: 0;
+        margin-bottom: 10px; /* Space between stacked buttons */
+        width: 100%; /* Make buttons take full width */
+        box-sizing: border-box;
+    }
+    .actions-bar form button {
+         width: 100%; /* Make button inside form also full width */
+    }
+
+} 

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .tool-detail {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .tool-detail h1 {
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .tool-detail h2 {
+            font-size: 1.2em;
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 5px;
+        }
+        .tool-detail p, .tool-detail pre {
+            white-space: pre-wrap; /* Respects newlines and whitespace */
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            font-family: monospace; /* For code block */
+        }
+        .tool-detail p {
+            font-family: sans-serif; /* Reset for non-code paragraphs */
+        }
+        .actions a, .actions button {
+            display: inline-block;
+            margin-right: 10px;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .actions .edit-button {
+            background-color: #f0ad4e;
+            color: white;
+            border: none;
+        }
+        .actions .edit-button:hover {
+            background-color: #ec971f;
+        }
+        .actions .delete-button {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .actions .delete-button:hover {
+            background-color: #c9302c;
+        }
+        .actions .back-button {
+            background-color: #6c757d;
+            color: white;
+        }
+        .actions .back-button:hover {
+            background-color: #5a6268;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px;">
+            <a href="/cart" class="button button-secondary">Cart (<%= cartItemCount %>)</a>
+        </div>
+        <div class="tool-detail-container">
+            <h1><%= tool.name %></h1>
+
+            <%# Add to/Remove from Cart button for this specific tool %>
+            <div class="actions-bar" style="margin-top: 10px; margin-bottom: 20px; border-top: none; padding-top: 0; justify-content: flex-start;">
+                <% if (cart.includes(tool.id)) { %>
+                    <form action="/cart/remove/<%= tool.id %>" method="POST" style="display: inline;">
+                        <button type="submit" class="button button-danger">Remove from Cart</button>
+                    </form>
+                <% } else { %>
+                    <form action="/cart/add/<%= tool.id %>" method="POST" style="display: inline;">
+                        <button type="submit" class="button button-primary">Add to Cart</button>
+                    </form>
+                <% } %>
+            </div>
+
+            <h2>Agent Instructions (Description)</h2>
+            <p><%= tool.description %></p>
+
+            <% if (tool.code && tool.code.trim() !== '') { %>
+                <h2>Python Tool Function (Code)</h2>
+                <pre><code><%- tool.formattedCode %></code></pre>
+            <% } %>
+
+            <div class="actions-bar">
+                <a href="/edit/<%= tool.id %>" class="button button-warning">Edit</a>
+                <form action="/delete/<%= tool.id %>" method="POST">
+                    <button type="submit" class="button button-danger" onclick="return confirm('Are you sure you want to delete this tool?');">Delete</button>
+                </form>
+                <a href="/" class="button button-secondary">Back to List</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html> 

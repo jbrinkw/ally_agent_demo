@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <h1><%= title %> (<%= cartItemCount %> items)</h1>
+            <div style="margin-top: 10px;">
+                <a href="/" class="button button-secondary">Continue Shopping</a>
+                <% if (tools && tools.length > 0) { %>
+                    <a href="/cart/export" class="button button-primary">Export to CSV</a>
+                    <form action="/cart/export-agent-py" method="POST" style="display: inline;">
+                        <button type="submit" class="button button-success" style="background-color: #28a745;">Update Local external_tool_agents.py (from Cart)</button>
+                    </form>
+                    <a href="/cart/download-agent-file" class="button button-success" style="background-color: #28a745;">Download external_tool_agents.py (from Cart)</a>
+                <% } %>
+            </div>
+        </div>
+
+        <% if (tools && tools.length > 0) { %>
+            <ul class="tool-list">
+                <% tools.forEach(tool => { %>
+                    <li class="tool-item">
+                        <h2><a href="/tool/<%= tool.id %>"><%= tool.name %></a></h2>
+                        <p class="description-preview"><%= tool.preview %></p>
+                        <div class="actions-bar" style="margin-top: 10px; border-top: none; padding-top: 0;">
+                             <form action="/cart/remove/<%= tool.id %>" method="POST" style="display: inline;">
+                                <button type="submit" class="button button-danger">Remove</button>
+                            </form>
+                        </div>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } else { %>
+            <p>Your cart is empty. <a href="/" class="button button-link">Browse tools</a></p>
+        <% } %>
+    </div>
+</body>
+</html> 
