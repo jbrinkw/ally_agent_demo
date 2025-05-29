@@ -1,0 +1,17 @@
+# Requirements for MCP Integration Testing
+# Install with: pip install -r requirements_mcp_test.txt
+
+# OpenAI Agent SDK
+openai-agents>=0.2.0
+
+# FastMCP for server integration
+fastmcp>=2.3.0
+
+# OpenAI client for API access
+openai>=1.0.0
+
+# Standard library dependencies (should be included)
+# asyncio - built-in
+# csv - built-in  
+# os - built-in
+# sys - built-in 

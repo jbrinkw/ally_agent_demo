@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import MCP Server</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .step-container {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .step-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .tools-preview {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .tool-preview-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .tool-preview-item:last-child {
+            border-bottom: none;
+        }
+        .loading {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Import MCP Server</h1>
+        <p>Import tools from an external MCP (Model Context Protocol) server and create a tool group.</p>
+        
+        <!-- Step 1: Enter Server URL -->
+        <div class="step-container">
+            <div class="step-title">Step 1: Connect to MCP Server</div>
+            <form id="connectForm">
+                <div class="form-group">
+                    <label for="serverUrl">MCP Server URL:</label>
+                    <input type="url" id="serverUrl" name="serverUrl" class="form-control" 
+                           placeholder="https://your-mcp-server.com/mcp" required>
+                    <small class="form-text">Enter the URL of the MCP server (HTTP over SSE)</small>
+                </div>
+                <button type="submit" class="button button-primary">Connect & Discover Tools</button>
+            </form>
+            
+            <div id="connectionStatus"></div>
+        </div>
+
+        <!-- Step 2: Review Tools & Create Group (Hidden initially) -->
+        <div class="step-container" id="step2" style="display: none;">
+            <div class="step-title">Step 2: Create Tool Group</div>
+            
+            <form id="importForm" action="/import-mcp-server" method="POST">
+                <input type="hidden" id="serverUrlHidden" name="serverUrl">
+                <input type="hidden" id="toolsData" name="toolsData">
+                
+                <div class="form-group">
+                    <label for="groupName">Tool Group Name:</label>
+                    <input type="text" id="groupName" name="name" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="instructions">Instructions:</label>
+                    <div style="position: relative;">
+                        <textarea id="instructions" name="instructions" class="form-control" rows="4" 
+                                  placeholder="Enter instructions for how to use this tool group..."></textarea>
+                        <button type="button" id="generateInstructions" class="button button-secondary" 
+                                style="position: absolute; top: 10px; right: 10px; padding: 5px 10px; font-size: 12px;">
+                            Auto-Generate
+                        </button>
+                    </div>
+                    <div id="generateStatus"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Tools to Import:</label>
+                    <div id="toolsPreview" class="tools-preview">
+                        <div class="loading">Connect to server to see available tools...</div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="button button-success">Import MCP Server & Create Tool Group</button>
+                    <a href="/tool-groups" class="button button-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('connectForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const serverUrl = document.getElementById('serverUrl').value;
+            const statusDiv = document.getElementById('connectionStatus');
+            
+            // Show loading state
+            statusDiv.innerHTML = '<div class="loading">Connecting to MCP server and discovering tools...</div>';
+            
+            try {
+                const response = await fetch('/api/mcp-server/discover', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ serverUrl })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show success and populate step 2
+                    statusDiv.innerHTML = '<div class="success">✅ Connected successfully! Found ' + result.tools.length + ' tools.</div>';
+                    
+                    // Populate hidden fields
+                    document.getElementById('serverUrlHidden').value = serverUrl;
+                    document.getElementById('toolsData').value = JSON.stringify(result.tools);
+                    
+                    // Populate group name if server has a name
+                    if (result.serverName) {
+                        document.getElementById('groupName').value = result.serverName + ' Tools';
+                    }
+                    
+                    // Show tools preview
+                    const toolsPreview = document.getElementById('toolsPreview');
+                    if (result.tools.length > 0) {
+                        toolsPreview.innerHTML = result.tools.map(tool => `
+                            <div class="tool-preview-item">
+                                <strong>${tool.name}</strong>
+                                <p style="margin: 5px 0; color: #666; font-size: 0.9em;">${tool.description || 'No description'}</p>
+                                ${tool.parameters && tool.parameters.length > 0 ? 
+                                    `<small style="color: #888;">Parameters: ${tool.parameters.join(', ')}</small>` : 
+                                    '<small style="color: #888;">No parameters</small>'
+                                }
+                            </div>
+                        `).join('');
+                    } else {
+                        toolsPreview.innerHTML = '<div style="color: #888; text-align: center; padding: 20px;">No tools found on this server.</div>';
+                    }
+                    
+                    // Show step 2
+                    document.getElementById('step2').style.display = 'block';
+                    
+                } else {
+                    statusDiv.innerHTML = '<div class="error">❌ Failed to connect: ' + result.error + '</div>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">❌ Connection failed: ' + error.message + '</div>';
+            }
+        });
+        
+        // Auto-generate instructions
+        document.getElementById('generateInstructions').addEventListener('click', async function() {
+            const toolsData = document.getElementById('toolsData').value;
+            const groupName = document.getElementById('groupName').value;
+            const statusDiv = document.getElementById('generateStatus');
+            const button = this;
+            
+            if (!toolsData) {
+                statusDiv.innerHTML = '<div class="error">Please connect to MCP server first.</div>';
+                return;
+            }
+            
+            button.disabled = true;
+            button.textContent = 'Generating...';
+            statusDiv.innerHTML = '<div class="loading">Generating instructions...</div>';
+            
+            try {
+                const response = await fetch('/generate-instructions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        tools: JSON.parse(toolsData),
+                        groupName: groupName || 'MCP Tools'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('instructions').value = result.instructions;
+                    statusDiv.innerHTML = '<div class="success">✅ Instructions generated successfully!</div>';
+                    setTimeout(() => statusDiv.innerHTML = '', 3000);
+                } else {
+                    statusDiv.innerHTML = '<div class="error">❌ Failed to generate instructions: ' + result.error + '</div>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Auto-Generate';
+            }
+        });
+    </script>
+</body>
+</html> 

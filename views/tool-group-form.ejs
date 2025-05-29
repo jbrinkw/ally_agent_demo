@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .tool-selection {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #fafafa;
+        }
+        .tool-checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            padding: 8px;
+            border-radius: 4px;
+            background-color: white;
+            border: 1px solid #eee;
+        }
+        .tool-checkbox-item:hover {
+            background-color: #f8f9fa;
+        }
+        .tool-checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+            margin-top: 2px;
+        }
+        .tool-checkbox-item .tool-info {
+            flex: 1;
+        }
+        .tool-checkbox-item .tool-name {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 4px;
+        }
+        .tool-checkbox-item .tool-description {
+            font-size: 0.9em;
+            color: #666;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><%= title %></h1>
+        
+        <form action="<%= action %>" method="POST">
+            <div>
+                <label for="name">Group Name:</label>
+                <input type="text" id="name" name="name" value="<%= toolGroup.name || '' %>" required>
+            </div>
+            
+            <div>
+                <label for="instructions">Group Instructions:</label>
+                <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 5px;">
+                    <button type="button" id="auto-generate-btn" class="button button-success" style="background-color: #28a745; padding: 8px 12px; font-size: 14px;">
+                        🤖 Auto-Generate Instructions
+                    </button>
+                    <span id="generate-status" style="color: #666; font-size: 14px; align-self: center;"></span>
+                </div>
+                <textarea id="instructions" name="instructions" rows="8" required placeholder="Enter the instructions for this tool group. These will be used to define how the agent should behave when using the tools in this group."><%= toolGroup.instructions || '' %></textarea>
+            </div>
+            
+            <div>
+                <label>Select Tools for this Group:</label>
+                <div class="tool-selection">
+                    <% if (allTools && allTools.length > 0) { %>
+                        <% allTools.forEach(tool => { %>
+                            <div class="tool-checkbox-item">
+                                <input type="checkbox" 
+                                       id="tool_<%= tool.id %>" 
+                                       name="toolIds" 
+                                       value="<%= tool.id %>"
+                                       <%= selectedToolIds.includes(tool.id) ? 'checked' : '' %>>
+                                <div class="tool-info">
+                                    <div class="tool-name"><%= tool.name %></div>
+                                    <div class="tool-description">
+                                        <%= tool.description.split('\n').slice(0, 2).join('\n') %>
+                                        <% if (tool.description.split('\n').length > 2) { %>...
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <p style="color: #666; font-style: italic;">No tools available. <a href="/new">Create some tools first</a>.</p>
+                    <% } %>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button type="submit" class="button button-primary">
+                    <%= toolGroup.id ? 'Update' : 'Create' %> Tool Group
+                </button>
+                <a href="<%= toolGroup.id ? '/tool-group/' + toolGroup.id : '/tool-groups' %>" class="button button-link">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('auto-generate-btn').addEventListener('click', async function() {
+            const button = this;
+            const statusSpan = document.getElementById('generate-status');
+            const instructionsTextarea = document.getElementById('instructions');
+            
+            // Get selected tool IDs
+            const selectedToolIds = Array.from(document.querySelectorAll('input[name="toolIds"]:checked'))
+                .map(checkbox => checkbox.value);
+                
+            if (selectedToolIds.length === 0) {
+                alert('Please select at least one tool before generating instructions.');
+                return;
+            }
+            
+            // Update UI to show loading state
+            button.disabled = true;
+            button.innerHTML = '⏳ Generating...';
+            statusSpan.textContent = 'Calling OpenAI API...';
+            
+            try {
+                const response = await fetch('/generate-instructions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ toolIds: selectedToolIds })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to generate instructions');
+                }
+                
+                // Update the textarea with generated instructions
+                instructionsTextarea.value = data.instructions;
+                statusSpan.textContent = 'Instructions generated successfully!';
+                statusSpan.style.color = '#28a745';
+                
+                // Clear status after a few seconds
+                setTimeout(() => {
+                    statusSpan.textContent = '';
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Error generating instructions:', error);
+                statusSpan.textContent = 'Error: ' + error.message;
+                statusSpan.style.color = '#dc3545';
+                
+                // Clear error after a few seconds
+                setTimeout(() => {
+                    statusSpan.textContent = '';
+                    statusSpan.style.color = '#666';
+                }, 5000);
+            } finally {
+                // Reset button state
+                button.disabled = false;
+                button.innerHTML = '🤖 Auto-Generate Instructions';
+            }
+        });
+    </script>
+</body>
+</html> 

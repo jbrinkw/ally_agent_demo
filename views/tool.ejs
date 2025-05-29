@@ -72,21 +72,35 @@
 </head>
 <body>
     <div class="container">
-        <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px;">
-            <a href="/cart" class="button button-secondary">Cart (<%= cartItemCount %>)</a>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h1><%= tool.name %></h1>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <a href="/" class="button button-link">All Tools</a>
+                <a href="/tool-groups" class="button button-link">Tool Groups</a>
+                <form action="/tools/update-external" method="POST" style="margin: 0;">
+                    <% if (totalEnabledCount > 0) { %>
+                        <button type="submit" class="button button-primary">
+                            Update (<%= totalEnabledCount %>)
+                        </button>
+                    <% } else { %>
+                        <button type="submit" class="button button-primary" style="background-color: #6c757d;">
+                            Update (<%= totalEnabledCount %>)
+                        </button>
+                    <% } %>
+                </form>
+            </div>
         </div>
         <div class="tool-detail-container">
-            <h1><%= tool.name %></h1>
 
-            <%# Add to/Remove from Cart button for this specific tool %>
+            <%# Toggle button for this specific tool %>
             <div class="actions-bar" style="margin-top: 10px; margin-bottom: 20px; border-top: none; padding-top: 0; justify-content: flex-start;">
-                <% if (cart.includes(tool.id)) { %>
-                    <form action="/cart/remove/<%= tool.id %>" method="POST" style="display: inline;">
-                        <button type="submit" class="button button-danger">Remove from Cart</button>
+                <% if (enabledTools.includes(tool.id)) { %>
+                    <form action="/tools/toggle/<%= tool.id %>" method="POST" style="display: inline;">
+                        <button type="submit" class="button button-success">Enabled ✓</button>
                     </form>
                 <% } else { %>
-                    <form action="/cart/add/<%= tool.id %>" method="POST" style="display: inline;">
-                        <button type="submit" class="button button-primary">Add to Cart</button>
+                    <form action="/tools/toggle/<%= tool.id %>" method="POST" style="display: inline;">
+                        <button type="submit" class="button button-secondary">Enable</button>
                     </form>
                 <% } %>
             </div>

@@ -10,7 +10,15 @@
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h1><%= title %></h1>
-            <a href="/cart" class="button button-secondary">Cart (<%= cartItemCount %>)</a>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <a href="/" class="button button-link">All Tools</a>
+                <a href="/tool-groups" class="button button-link">Tool Groups</a>
+                <form action="/tools/update-external" method="POST" style="margin: 0;">
+                    <button type="submit" class="button button-primary" style="background-color: <%= totalEnabledCount > 0 ? '#007bff' : '#6c757d' %>;">
+                        Update (<%= totalEnabledCount %>)
+                    </button>
+                </form>
+            </div>
         </div>
         <form action="<%= action %>" method="POST">
             <div>

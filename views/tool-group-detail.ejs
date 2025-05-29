@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <h1><%= toolGroup.name %></h1>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <a href="/tool-groups" class="button button-secondary">Back to Tool Groups</a>
+            </div>
+        </div>
+
+        <div class="tool-detail-container">
+            <h2>Group Instructions</h2>
+            <p><%= toolGroup.instructions %></p>
+
+            <h2>Tools in this Group (<%= tools.length %>)</h2>
+            <% if (tools && tools.length > 0) { %>
+                <% tools.forEach(tool => { %>
+                    <div style="border: 1px solid #eee; border-radius: 4px; padding: 15px; margin-bottom: 15px; background-color: #fafafa;">
+                        <h3 style="margin-top: 0; margin-bottom: 10px;">
+                            <a href="/tool/<%= tool.id %>" style="text-decoration: none; color: #007bff;"><%= tool.name %></a>
+                        </h3>
+                        <p style="margin-bottom: 0; color: #666; font-size: 0.95em;">
+                            <%= tool.description.split('\n').slice(0, 2).join('\n') %>
+                        </p>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <p style="color: #666; font-style: italic;">No tools have been added to this group yet.</p>
+            <% } %>
+
+            <div class="actions-bar">
+                <a href="/edit-tool-group/<%= toolGroup.id %>" class="button button-warning">Edit Group</a>
+                <form action="/delete-tool-group/<%= toolGroup.id %>" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this tool group? This action cannot be undone.');">
+                    <button type="submit" class="button button-danger">Delete Group</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

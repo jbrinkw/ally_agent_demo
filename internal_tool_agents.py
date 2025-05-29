@@ -1,79 +1,10 @@
 from agents import Agent, function_tool
 import os
 import csv
-from send_email import send_email # Assuming send_email.py is in the same directory or accessible
 import yfinance as yf
 from datetime import datetime, timedelta
 
-# --- Constants ---
-EMAIL_INBOX_FILE = "email_inbox.csv"
-
-# --- Email Specialist ---
-@function_tool
-def _send_email_tool(recipient_email: str, subject_line: str, body_content: str, attachment_file_path: str = None) -> str:
-    """ 
-    Sends an email with the provided details. 
-    Requires recipient_email, subject_line, and body_content. 
-    attachment_file_path is optional. 
-    Returns a status message indicating success or failure.
-    Ensure GMAIL_USERNAME and GMAIL_PASSWORD environment variables are set for this tool to function.
-    """
-    return send_email(recipient_email, subject_line, body_content, attachment_file_path)
-
-@function_tool
-def _get_recent_emails_summary() -> list[dict[str, str]] | str:
-    """
-    Reads the simulated email inbox (email_inbox.csv) and returns a list of summaries 
-    (sender and subject) for all emails. Returns an error string if the inbox file is not found.
-    """
-    summaries = []
-    try:
-        with open(EMAIL_INBOX_FILE, 'r', newline='') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                summaries.append({"sender": row['sender'], "subject": row['subject']})
-        if not summaries:
-            return "The simulated inbox is empty."
-        return summaries
-    except FileNotFoundError:
-        return f"Error: The simulated email inbox file '{EMAIL_INBOX_FILE}' was not found."
-    except Exception as e:
-        return f"Error reading simulated inbox: {e}"
-
-@function_tool
-def _get_email_body(subject: str) -> str:
-    """
-    Reads the simulated email inbox (email_inbox.csv) and returns the body of the first email 
-    that matches the given subject (case-insensitive). 
-    Returns a 'not found' message if no match.
-    """
-    try:
-        with open(EMAIL_INBOX_FILE, 'r', newline='') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                if row['subject'].lower() == subject.lower():
-                    return row['body']
-        return f"Email not found with subject '{subject}'."
-    except FileNotFoundError:
-        return f"Error: The simulated email inbox file '{EMAIL_INBOX_FILE}' was not found."
-    except Exception as e:
-        return f"Error reading simulated inbox: {e}"
-
-email_specialist_agent = Agent(
-    name="Email Specialist",
-    instructions=(
-        "You are a specialized email assistant. You have several capabilities: "
-        "1. Sending emails: If the user wants to send an email, gather all necessary details (recipient, subject, body, optional attachment path), then use the '_send_email_tool'. Remind the user about GMAIL environment variables for sending. "
-        "2. Reading recent email summaries: If the user asks to check their emails or see recent emails, use the '_get_recent_emails_summary' tool to list senders and subjects from their simulated inbox. You can use the output of this tool to help identify specific emails later. "
-        "3. Reading a specific email's body: To use the '_get_email_body' tool, you need the exact subject line. "
-        "   If the user provides the subject, you can directly use the '_get_email_body' tool. "
-        "   If the subject is not clear, you can use the email summaries from '_get_recent_emails_summary' to help the user identify the correct subject, then ask them to confirm the subject they want to read before calling '_get_email_body'. "
-        "Always relay the outcome (success, data, or error message) from any tool call back to the user. "
-        "If sending an email, prepend your response with EMAIL SENT or EMAIL NOT SENT based on the tool outcome. "
-        "Respond in plain text only. Do not use any Markdown formatting."
-    ),
-    tools=[_send_email_tool, _get_recent_emails_summary, _get_email_body]
-)
+# --- Email Specialist has been migrated to email_specialist_mcp.py ---
 
 # --- CSV Creator Specialist ---
 @function_tool
@@ -166,10 +97,6 @@ stock_info_specialist_agent = Agent(
 
 # List of directly usable tool objects to be imported by the main agent file
 internal_tools_list = [
-    email_specialist_agent.as_tool(
-        tool_name="email_specialist_tool",
-        tool_description="Call this tool for any email-related tasks, including sending new emails, checking summaries of received emails (sender and subject), or reading the body of a specific received email (identified by subject) from a simulated inbox."
-    ),
     csv_creator_specialist_agent.as_tool(
         tool_name="create_csv_file_via_specialist_agent",
         tool_description="Call this tool to create a CSV file from provided data. You will need to provide the data and optionally a filename."

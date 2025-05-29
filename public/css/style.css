@@ -87,6 +87,14 @@ textarea {
     background-color: #b02a37;
 }
 
+.button-success {
+    background-color: #28a745; /* Bootstrap success green */
+    color: white;
+}
+.button-success:hover {
+    background-color: #1e7e34;
+}
+
 /* Link styled as button for "Cancel" or "Back" */
 .button-link {
     background-color: #f8f9fa; /* Light gray */
@@ -199,6 +207,17 @@ textarea {
     max-width: 960px; /* Limit width for larger screens */
     margin: 0 auto; /* Center the content */
     padding: 0 15px; /* Add some padding on the sides */
+}
+
+/* Enabled tools counter styling */
+.enabled-counter {
+    font-weight: bold;
+    color: #28a745;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border: 1px solid #28a745;
+    border-radius: 4px;
+    font-size: 0.9em;
 }
 
 /* Responsive adjustments */
