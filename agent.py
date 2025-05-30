@@ -1,8 +1,24 @@
+"""
+Ally Agent Demo - Streamlit Chat Interface
+
+This is the main chat interface for interacting with the AI agent and its tools.
+It imports tools from both internal_tool_agents.py (built-in tools) and 
+external_tool_agents.py (generated from web UI) and creates a unified chat experience.
+
+Run with: streamlit run agent.py
+Access at: http://localhost:8501
+
+The agent will automatically select appropriate tools based on user requests.
+"""
+
 import os
 from dotenv import load_dotenv
 from agents import Agent, Runner
 import streamlit as st
 import asyncio
+
+# === TOOL IMPORTS ===
+# This section imports tools from both internal and external sources
 
 # Attempt to import external tools (now only random number)
 external_tools = [] # Default to empty list

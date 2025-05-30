@@ -1,15 +1,28 @@
 #!/usr/bin/env python3
 """
-Email Specialist FastMCP Server
+Email Specialist MCP Server
 
-This MCP server provides email-related functionality including sending emails,
-reading email summaries, and getting specific email bodies from a simulated inbox.
+A standalone FastMCP server that provides email-related tools:
+- send_email_tool: Send emails with optional attachments
+- get_recent_emails_summary: Get summaries of recent emails (simulated)
+- get_email_body: Get specific email content by subject (simulated)
+
+This replaces the old email specialist from internal_tool_agents.py and provides
+a clean MCP interface that can be called from external_tool_agents.py
+
+Run with: python email_specialist_mcp.py
+Server will start on: http://localhost:8000
+MCP endpoint: http://localhost:8000/mcp
+
+Environment variables required:
+- GMAIL_USERNAME: Your Gmail address
+- GMAIL_PASSWORD: Your Gmail app password
 """
 
 import csv
 import os
 from fastmcp import FastMCP
-from send_email import send_email  # Assuming send_email.py is in the same directory
+from utils.send_email import send_email  # Assuming send_email.py is in the same directory
 
 # Constants
 EMAIL_INBOX_FILE = "email_inbox.csv"

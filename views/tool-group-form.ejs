@@ -69,8 +69,8 @@
             <div>
                 <label>Select Tools for this Group:</label>
                 <div class="tool-selection">
-                    <% if (allTools && allTools.length > 0) { %>
-                        <% allTools.forEach(tool => { %>
+                    <% if (availableTools && availableTools.length > 0) { %>
+                        <% availableTools.forEach(tool => { %>
                             <div class="tool-checkbox-item">
                                 <input type="checkbox" 
                                        id="tool_<%= tool.id %>" 
@@ -107,13 +107,22 @@
             const button = this;
             const statusSpan = document.getElementById('generate-status');
             const instructionsTextarea = document.getElementById('instructions');
+            const groupNameInput = document.getElementById('name');
             
             // Get selected tool IDs
             const selectedToolIds = Array.from(document.querySelectorAll('input[name="toolIds"]:checked'))
                 .map(checkbox => checkbox.value);
                 
+            // Get group name
+            const groupName = groupNameInput.value.trim();
+                
             if (selectedToolIds.length === 0) {
                 alert('Please select at least one tool before generating instructions.');
+                return;
+            }
+            
+            if (!groupName) {
+                alert('Please enter a group name before generating instructions.');
                 return;
             }
             
@@ -128,7 +137,10 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ toolIds: selectedToolIds })
+                    body: JSON.stringify({ 
+                        toolIds: selectedToolIds,
+                        groupName: groupName 
+                    })
                 });
                 
                 const data = await response.json();
