@@ -6,6 +6,26 @@
     <title><%= title %></title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ddd;
+        }
+        .user-badge {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .user-badge.no-user {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
         .tool-list {
             list-style: none;
             padding: 0;
@@ -39,8 +59,20 @@
 </head>
 <body>
     <div class="container">
+        <!-- Header with current user display -->
+        <header class="header">
+            <h1>🔧 Ally Agent Demo</h1>
+            <div class="current-user">
+                <% if (currentUser) { %>
+                    <span class="user-badge">👤 <%= currentUser.name %></span>
+                <% } else { %>
+                    <span class="user-badge no-user">👤 No User Selected</span>
+                <% } %>
+            </div>
+        </header>
+
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-            <h1><%= title %></h1>
+            <h2><%= title %></h2>
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <span class="enabled-counter">Enabled: <%= totalEnabledCount %> (<%= enabledToolsCount %> tools, <%= enabledToolGroupsCount %> groups)</span>
                 <form action="/tools/update-external" method="POST" style="display: inline;">
@@ -54,7 +86,8 @@
                         </button>
                     <% } %>
                 </form>
-                <a href="/tool-groups" class="button button-secondary">Tool Groups</a>
+                <a href="/users" class="button button-info" style="background-color: #17a2b8;">👥 Users</a>
+                <a href="/tool-groups" class="button button-secondary">📦 Tool Groups</a>
             </div>
         </div>
         <div style="margin-bottom: 20px;">
@@ -75,7 +108,7 @@
                         <h2><a href="/tool/<%= tool.id %>"><%= tool.name %></a></h2>
                         <p class="description-preview"><%= tool.preview %></p>
                         <div class="actions-bar" style="margin-top: 10px; border-top: none; padding-top: 0; display: flex; gap: 10px; align-items: center;">
-                            <% if (enabledTools.includes(tool.id)) { %>
+                            <% if (tool.isEnabled) { %>
                                 <form action="/tools/toggle/<%= tool.id %>" method="POST" style="display: inline;">
                                     <button type="submit" class="button button-success" style="background-color: #28a745;">✓ Enabled</button>
                                 </form>

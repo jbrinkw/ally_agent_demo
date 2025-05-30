@@ -29,6 +29,22 @@ export function configureToolGroupsRoutes(db, openaiService) {
       `);
       const toolGroups = groupStmt.all();
 
+      // Get user-specific tool group enabled status
+      let userEnabledGroups = [];
+      if (req.session.currentUser) {
+        const enabledStmt = db.prepare(`
+          SELECT tool_group_id FROM user_tool_group_selections 
+          WHERE user_id = ? AND enabled = 1
+        `);
+        userEnabledGroups = enabledStmt.all(req.session.currentUser.id).map(row => row.tool_group_id);
+      }
+
+      // Add enabled status to each group
+      const toolGroupsWithStatus = toolGroups.map(group => ({
+        ...group,
+        isEnabled: userEnabledGroups.includes(group.id)
+      }));
+
       // Check for success message
       let successMessage = null;
       if (req.query.message === 'external_tools_updated') {
@@ -38,7 +54,7 @@ export function configureToolGroupsRoutes(db, openaiService) {
       }
 
       res.render('tool-groups', { 
-        toolGroups, 
+        toolGroups: toolGroupsWithStatus,
         title: 'Tool Groups',
         successMessage
       });
@@ -303,12 +319,57 @@ export function configureToolGroupsRoutes(db, openaiService) {
    */
   router.post('/tool-groups/toggle/:id', (req, res) => {
     const groupId = parseInt(req.params.id, 10);
-    if (req.session.enabledToolGroups.includes(groupId)) {
-      req.session.enabledToolGroups = req.session.enabledToolGroups.filter(id => id !== groupId);
-    } else {
-      req.session.enabledToolGroups.push(groupId);
+    
+    // Check if user is selected
+    if (!req.session.currentUser) {
+      return res.status(400).send('Please select a user first to manage tool group selections.');
     }
-    res.redirect(req.headers.referer || '/tool-groups'); 
+
+    const userId = req.session.currentUser.id;
+    
+    try {
+      // Check current state in database
+      const currentSelection = db.prepare(`
+        SELECT enabled FROM user_tool_group_selections 
+        WHERE user_id = ? AND tool_group_id = ?
+      `).get(userId, groupId);
+
+      if (currentSelection) {
+        // Update existing selection
+        const newEnabled = !currentSelection.enabled;
+        db.prepare(`
+          UPDATE user_tool_group_selections 
+          SET enabled = ? 
+          WHERE user_id = ? AND tool_group_id = ?
+        `).run(newEnabled, userId, groupId);
+        
+        // Update session
+        if (newEnabled) {
+          if (!req.session.enabledToolGroups.includes(groupId)) {
+            req.session.enabledToolGroups.push(groupId);
+          }
+        } else {
+          req.session.enabledToolGroups = req.session.enabledToolGroups.filter(id => id !== groupId);
+        }
+      } else {
+        // Create new selection (enabled)
+        db.prepare(`
+          INSERT INTO user_tool_group_selections (user_id, tool_group_id, enabled) 
+          VALUES (?, ?, 1)
+        `).run(userId, groupId);
+        
+        // Update session
+        if (!req.session.enabledToolGroups.includes(groupId)) {
+          req.session.enabledToolGroups.push(groupId);
+        }
+      }
+
+      console.log(`Tool group ${groupId} toggled for user ${req.session.currentUser.name}`);
+      res.redirect(req.headers.referer || '/tool-groups');
+    } catch (error) {
+      console.error("Failed to toggle tool group:", error);
+      res.status(500).send("Failed to toggle tool group.");
+    }
   });
 
   return router;

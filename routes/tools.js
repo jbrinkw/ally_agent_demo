@@ -14,16 +14,27 @@ const router = express.Router();
 export function configureToolsRoutes(db, externalToolsGenerator) {
 
   /**
-   * GET / - Home page: Display a list of all tools.
+   * GET / - Main Tools Page
    */
   router.get('/', (req, res) => {
     try {
       const stmt = db.prepare('SELECT id, name, description FROM tools ORDER BY name ASC');
       const tools = stmt.all();
 
+      // Get user-specific tool enabled status
+      let userEnabledTools = [];
+      if (req.session.currentUser) {
+        const enabledStmt = db.prepare(`
+          SELECT tool_id FROM user_tool_selections 
+          WHERE user_id = ? AND enabled = 1
+        `);
+        userEnabledTools = enabledStmt.all(req.session.currentUser.id).map(row => row.tool_id);
+      }
+
       const toolsWithPreview = tools.map(tool => ({
         ...tool,
-        preview: tool.description.split('\n').slice(0, 2).join('\n')
+        preview: tool.description.split('\n').slice(0, 2).join('\n'),
+        isEnabled: userEnabledTools.includes(tool.id)
       }));
 
       // Check for success message
@@ -165,12 +176,57 @@ export function configureToolsRoutes(db, externalToolsGenerator) {
    */
   router.post('/tools/toggle/:id', (req, res) => {
     const toolId = parseInt(req.params.id, 10);
-    if (req.session.enabledTools.includes(toolId)) {
-      req.session.enabledTools = req.session.enabledTools.filter(id => id !== toolId);
-    } else {
-      req.session.enabledTools.push(toolId);
+    
+    // Check if user is selected
+    if (!req.session.currentUser) {
+      return res.status(400).send('Please select a user first to manage tool selections.');
     }
-    res.redirect(req.headers.referer || '/'); 
+
+    const userId = req.session.currentUser.id;
+    
+    try {
+      // Check current state in database
+      const currentSelection = db.prepare(`
+        SELECT enabled FROM user_tool_selections 
+        WHERE user_id = ? AND tool_id = ?
+      `).get(userId, toolId);
+
+      if (currentSelection) {
+        // Update existing selection
+        const newEnabled = !currentSelection.enabled;
+        db.prepare(`
+          UPDATE user_tool_selections 
+          SET enabled = ? 
+          WHERE user_id = ? AND tool_id = ?
+        `).run(newEnabled, userId, toolId);
+        
+        // Update session
+        if (newEnabled) {
+          if (!req.session.enabledTools.includes(toolId)) {
+            req.session.enabledTools.push(toolId);
+          }
+        } else {
+          req.session.enabledTools = req.session.enabledTools.filter(id => id !== toolId);
+        }
+      } else {
+        // Create new selection (enabled)
+        db.prepare(`
+          INSERT INTO user_tool_selections (user_id, tool_id, enabled) 
+          VALUES (?, ?, 1)
+        `).run(userId, toolId);
+        
+        // Update session
+        if (!req.session.enabledTools.includes(toolId)) {
+          req.session.enabledTools.push(toolId);
+        }
+      }
+
+      console.log(`Tool ${toolId} toggled for user ${req.session.currentUser.name}`);
+      res.redirect(req.headers.referer || '/');
+    } catch (error) {
+      console.error("Failed to toggle tool:", error);
+      res.status(500).send("Failed to toggle tool.");
+    }
   });
 
   /**

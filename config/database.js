@@ -25,6 +25,15 @@ const db = new Database(path.join(dbDir, 'tools.db'));
 
 // Create database schema
 function initializeSchema() {
+  // Create the 'users' table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Create the 'tools' table
   db.exec(`
     CREATE TABLE IF NOT EXISTS tools (
@@ -57,7 +66,40 @@ function initializeSchema() {
     )
   `);
 
-  console.log('Database schema initialized successfully');
+  // Create user-specific tool selections table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_tool_selections (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      tool_id INTEGER NOT NULL,
+      enabled BOOLEAN NOT NULL DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (tool_id) REFERENCES tools(id) ON DELETE CASCADE,
+      UNIQUE(user_id, tool_id)
+    )
+  `);
+
+  // Create user-specific tool group selections table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_tool_group_selections (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      tool_group_id INTEGER NOT NULL,
+      enabled BOOLEAN NOT NULL DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (tool_group_id) REFERENCES tool_groups(id) ON DELETE CASCADE,
+      UNIQUE(user_id, tool_group_id)
+    )
+  `);
+
+  // Create a default user if none exists
+  const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
+  if (userCount.count === 0) {
+    const defaultUser = db.prepare('INSERT INTO users (name) VALUES (?)').run('Default User');
+    console.log('Created default user with ID:', defaultUser.lastInsertRowid);
+  }
+
+  console.log('Database schema initialized successfully with user management');
 }
 
 // Initialize the schema

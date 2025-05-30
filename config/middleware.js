@@ -39,17 +39,26 @@ export function configureMiddleware(app) {
 
   // Middleware to make enabled tools and groups available in all templates
   app.use((req, res, next) => {
+    // Initialize session variables if they don't exist
     if (!req.session.enabledTools) {
       req.session.enabledTools = []; // Initialize enabled tools as an empty array
     }
     if (!req.session.enabledToolGroups) {
       req.session.enabledToolGroups = []; // Initialize enabled tool groups as an empty array
     }
+    if (!req.session.currentUser) {
+      // Auto-select the default user if no user is selected
+      // This will be set properly when database is available
+      req.session.currentUser = null;
+    }
+    
+    // Make session data available in all templates
     res.locals.enabledTools = req.session.enabledTools;
     res.locals.enabledToolsCount = req.session.enabledTools.length;
     res.locals.enabledToolGroups = req.session.enabledToolGroups;
     res.locals.enabledToolGroupsCount = req.session.enabledToolGroups.length;
     res.locals.totalEnabledCount = req.session.enabledTools.length + req.session.enabledToolGroups.length;
+    res.locals.currentUser = req.session.currentUser; // Make current user available in all templates
     next();
   });
 

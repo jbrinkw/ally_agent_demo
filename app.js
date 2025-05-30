@@ -19,6 +19,7 @@ import * as externalToolsGenerator from './services/externalToolsGenerator.js';
 import { configureToolsRoutes } from './routes/tools.js';
 import { configureToolGroupsRoutes } from './routes/toolGroups.js';
 import { configureMCPRoutes } from './routes/mcpServer.js';
+import { configureUsersRoutes } from './routes/users.js';
 
 // Import utilities
 import { seedDatabase } from './utils/seedData.js';
@@ -36,11 +37,13 @@ configureMiddleware(app);
 const toolsRouter = configureToolsRoutes(db, externalToolsGenerator);
 const toolGroupsRouter = configureToolGroupsRoutes(db, openaiService);
 const mcpRouter = configureMCPRoutes(db);
+const usersRouter = configureUsersRoutes(db);
 
 // Mount route modules
 app.use('/', toolsRouter);            // Individual tools routes
 app.use('/', toolGroupsRouter);       // Tool groups routes  
 app.use('/', mcpRouter);              // MCP server routes
+app.use('/', usersRouter);            // User management routes
 
 // === Database Seeding ===
 // Seed database with example data
@@ -52,7 +55,7 @@ app.listen(port, () => {
   console.log('📁 Modules loaded:');
   console.log('   - Database: SQLite with schema initialized');
   console.log('   - Middleware: Session, parsing, static files configured');
-  console.log('   - Routes: Tools, Tool Groups, MCP Server');
+  console.log('   - Routes: Tools, Tool Groups, MCP Server, Users');
   console.log('   - Services: OpenAI, External Tools Generator');
   console.log('   - Utils: Seed data loaded');
   console.log('');
