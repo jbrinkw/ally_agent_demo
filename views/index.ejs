@@ -5,57 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
     <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #ddd;
-        }
-        .user-badge {
-            background-color: #e3f2fd;
-            color: #1976d2;
-            padding: 6px 12px;
-            border-radius: 16px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .user-badge.no-user {
-            background-color: #fff3e0;
-            color: #f57c00;
-        }
-        .tool-list {
-            list-style: none;
-            padding: 0;
-        }
-        .tool-item {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            padding: 15px;
-        }
-        .tool-item h2 {
-            margin-top: 0;
-        }
-        .tool-item p {
-            white-space: pre-wrap; /* Respect newlines in preview */
-        }
-        .add-tool-button {
-            display: inline-block;
-            background-color: #0275d8;
-            color: white;
-            padding: 10px 15px;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        .add-tool-button:hover {
-            background-color: #025aa5;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -73,11 +22,11 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
             <h2><%= title %></h2>
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div class="actions-bar">
                 <span class="enabled-counter">Enabled: <%= totalEnabledCount %> (<%= enabledToolsCount %> tools, <%= enabledToolGroupsCount %> groups)</span>
-                <form action="/tools/update-external" method="POST" style="display: inline;">
+                <form action="/tools/update-external" method="POST">
                     <% if (totalEnabledCount > 0) { %>
-                        <button type="submit" class="button button-success" style="background-color: #28a745;">
+                        <button type="submit" class="button button-success">
                             Update External Tools
                         </button>
                     <% } else { %>
@@ -86,17 +35,17 @@
                         </button>
                     <% } %>
                 </form>
-                <a href="/users" class="button button-info" style="background-color: #17a2b8;">👥 Users</a>
+                <a href="/users" class="button button-info">👥 Users</a>
                 <a href="/tool-groups" class="button button-secondary">📦 Tool Groups</a>
             </div>
         </div>
-        <div style="margin-bottom: 20px;">
+        <div class="actions-bar">
             <a href="/new" class="button button-primary">Add New Tool</a>
-            <a href="/new-tool-group" class="button button-success" style="background-color: #28a745; margin-left: 10px;">Create Tool Group</a>
+            <a href="/new-tool-group" class="button button-success">Create Tool Group</a>
         </div>
 
         <% if (successMessage) { %>
-            <div class="success-message" style="background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 4px; padding: 12px; margin-bottom: 20px;">
+            <div class="success-message">
                 <%= successMessage %>
             </div>
         <% } %>
@@ -107,13 +56,13 @@
                     <li class="tool-item">
                         <h2><a href="/tool/<%= tool.id %>"><%= tool.name %></a></h2>
                         <p class="description-preview"><%= tool.preview %></p>
-                        <div class="actions-bar" style="margin-top: 10px; border-top: none; padding-top: 0; display: flex; gap: 10px; align-items: center;">
+                        <div class="actions-bar">
                             <% if (tool.isEnabled) { %>
-                                <form action="/tools/toggle/<%= tool.id %>" method="POST" style="display: inline;">
-                                    <button type="submit" class="button button-success" style="background-color: #28a745;">✓ Enabled</button>
+                                <form action="/tools/toggle/<%= tool.id %>" method="POST">
+                                    <button type="submit" class="button button-success">✓ Enabled</button>
                                 </form>
                             <% } else { %>
-                                <form action="/tools/toggle/<%= tool.id %>" method="POST" style="display: inline;">
+                                <form action="/tools/toggle/<%= tool.id %>" method="POST">
                                     <button type="submit" class="button button-secondary">Enable Tool</button>
                                 </form>
                             <% } %>

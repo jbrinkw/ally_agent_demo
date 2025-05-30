@@ -5,91 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
     <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .tool-detail {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .tool-detail h1 {
-            margin-top: 0;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
-        .tool-detail h2 {
-            font-size: 1.2em;
-            color: #555;
-            margin-top: 20px;
-            margin-bottom: 5px;
-        }
-        .tool-detail p, .tool-detail pre {
-            white-space: pre-wrap; /* Respects newlines and whitespace */
-            background-color: #f9f9f9;
-            padding: 10px;
-            border: 1px solid #eee;
-            border-radius: 4px;
-            font-family: monospace; /* For code block */
-        }
-        .tool-detail p {
-            font-family: sans-serif; /* Reset for non-code paragraphs */
-        }
-        .actions a, .actions button {
-            display: inline-block;
-            margin-right: 10px;
-            padding: 8px 12px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 0.9em;
-        }
-        .actions .edit-button {
-            background-color: #f0ad4e;
-            color: white;
-            border: none;
-        }
-        .actions .edit-button:hover {
-            background-color: #ec971f;
-        }
-        .actions .delete-button {
-            background-color: #d9534f;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        .actions .delete-button:hover {
-            background-color: #c9302c;
-        }
-        .actions .back-button {
-            background-color: #6c757d;
-            color: white;
-        }
-        .actions .back-button:hover {
-            background-color: #5a6268;
-        }
-
-    </style>
 </head>
 <body>
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div class="header">
             <h1><%= tool.name %></h1>
-            <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="actions-bar">
                 <a href="/" class="button button-link">All Tools</a>
                 <a href="/tool-groups" class="button button-link">Tool Groups</a>
-                <form action="/tools/update-external" method="POST" style="margin: 0;">
-                    <% if (totalEnabledCount > 0) { %>
-                        <button type="submit" class="button button-primary">
-                            Update (<%= totalEnabledCount %>)
-                        </button>
-                    <% } else { %>
-                        <button type="submit" class="button button-primary" style="background-color: #6c757d;">
-                            Update (<%= totalEnabledCount %>)
-                        </button>
-                    <% } %>
+                <form action="/tools/update-external" method="POST">
+                    <button type="submit" class="button button-primary">Update External Tools</button>
                 </form>
             </div>
         </div>
+
         <div class="tool-detail-container">
 
             <%# Toggle button for this specific tool %>

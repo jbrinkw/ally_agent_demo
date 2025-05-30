@@ -198,7 +198,7 @@ export function configureToolsRoutes(db, externalToolsGenerator) {
           UPDATE user_tool_selections 
           SET enabled = ? 
           WHERE user_id = ? AND tool_id = ?
-        `).run(newEnabled, userId, toolId);
+        `).run(newEnabled ? 1 : 0, userId, toolId);
         
         // Update session
         if (newEnabled) {

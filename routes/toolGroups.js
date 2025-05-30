@@ -341,7 +341,7 @@ export function configureToolGroupsRoutes(db, openaiService) {
           UPDATE user_tool_group_selections 
           SET enabled = ? 
           WHERE user_id = ? AND tool_group_id = ?
-        `).run(newEnabled, userId, groupId);
+        `).run(newEnabled ? 1 : 0, userId, groupId);
         
         // Update session
         if (newEnabled) {

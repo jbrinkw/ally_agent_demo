@@ -87,6 +87,54 @@ if not OPENAI_API_KEY:
 # Streamlit App
 st.title("Chat with My Multi-Tool Agent")
 
+# Sidebar for API credentials and external tools fetching
+with st.sidebar:
+    st.header("🔑 API Integration")
+    st.write("Fetch external tools from your user account")
+    
+    # API credentials input
+    api_key = st.text_input("API Key", type="password", placeholder="ak_...")
+    api_secret = st.text_input("API Secret", type="password", placeholder="as_...")
+    
+    # Fetch button
+    if st.button("🔄 Fetch My External Tools", type="primary"):
+        if api_key and api_secret:
+            try:
+                import requests
+                from requests.auth import HTTPBasicAuth
+                
+                # Make API request to /me endpoint (no user_id needed)
+                response = requests.get(
+                    "http://localhost:8080/api/users/me",
+                    auth=HTTPBasicAuth(api_key, api_secret),
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    # Save the external tools file
+                    with open("external_tool_agents.py", "w") as f:
+                        f.write(response.text)
+                    
+                    st.success("✅ External tools file updated successfully!")
+                    st.info("Please restart the Streamlit app to load the new tools.")
+                    
+                elif response.status_code == 401:
+                    st.error("❌ Authentication failed. Please check your API credentials.")
+                elif response.status_code == 403:
+                    st.error("❌ Access denied. You can only access your own tools.")
+                else:
+                    st.error(f"❌ Error fetching tools: {response.status_code}")
+                    
+            except requests.exceptions.ConnectionError:
+                st.error("❌ Could not connect to API server. Make sure it's running on port 8080.")
+            except Exception as e:
+                st.error(f"❌ Error: {str(e)}")
+        else:
+            st.warning("⚠️ Please enter both API Key and API Secret")
+    
+    st.markdown("---")
+    st.caption("💡 Get your API credentials from the User Management page")
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 

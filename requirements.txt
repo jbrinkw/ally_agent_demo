@@ -1,0 +1,5 @@
+streamlit
+python-dotenv
+openai-agents
+requests
+yfinance 

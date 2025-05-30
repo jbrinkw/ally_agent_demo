@@ -4,36 +4,11 @@ import os
 import asyncio
 
 
-# --- File Reader Specialist --- 
-@function_tool
-def _read_test_data_file_content() -> str:
-    """Reads the content of 'test_data.txt' from the current working directory and returns it."""
-    file_path = "test_data.txt"
-    try:
-        with open(file_path, 'r') as f:
-            content = f.read()
-        return content
-    except FileNotFoundError:
-        return f"Error: The file '{file_path}' was not found."
-    except Exception as e:
-        return f"Error reading file '{file_path}': {e}"
-
-file_reader_specialist_agent = Agent(
-    name="File Reader Specialist",
-    instructions="You are a specialized file reader agent. Use the \'_read_test_data_file_content\' tool to read the contents of \'test_data.txt\'. Return the content obtained from the tool, or the error message if the tool provides one.",
-    tools=[_read_test_data_file_content]
-)
-
-
-# --- get_email_body --- 
-# MCP Tool: get_email_body
-# Server URL: http://localhost:8000/mcp
-# Description: Reads the simulated email inbox (email_inbox.csv) and returns the body of the first email that matches the given subject (case-insensitive). Returns a "not found" message if no match.
-
+# --- MCP Email Server Tool Group ---
 @function_tool
 def get_email_body(subject: str) -> str:
     """
-    Reads the simulated email inbox (email_inbox.csv) and returns the body of the first email that matches the given subject (case-insensitive). Returns a \"not found\" message if no match.
+    Reads the simulated email inbox (email_inbox.csv) and returns the body of the first email      that matches the given subject (case-insensitive).      Returns a 'not found' message if no match.
     
     Parameters:
     subject (str): Parameter for the MCP tool
@@ -46,7 +21,7 @@ def get_email_body(subject: str) -> str:
         import asyncio
         
         async def _get_email_body():
-            client = Client("http://localhost:8000/mcp")
+            client = Client("http://localhost:8000/mcp/")
             async with client:
                 result = await client.call_tool("get_email_body", {"subject": subject})
                 return str(result)
@@ -65,63 +40,11 @@ def get_email_body(subject: str) -> str:
             return asyncio.run(_get_email_body())
     except Exception as e:
         return f"Error calling MCP tool 'get_email_body': {str(e)}"
-
-get_email_body_agent = Agent(
-    name="get_email_body",
-    instructions="Reads the simulated email inbox (email_inbox.csv) and returns the body of the first email that matches the given subject (case-insensitive). Returns a \'not found\' message if no match.",
-    tools=[get_email_body]
-)
-
-
-# --- MCP Email Server Tool Group --- 
-# MCP Tool: get_email_body
-# Server URL: http://localhost:8000/mcp
-# Description: Reads the simulated email inbox (email_inbox.csv) and returns the body of the first email that matches the given subject (case-insensitive). Returns a "not found" message if no match.
-
-@function_tool
-def get_email_body(subject: str) -> str:
-    """
-    Reads the simulated email inbox (email_inbox.csv) and returns the body of the first email that matches the given subject (case-insensitive). Returns a \"not found\" message if no match.
-    
-    Parameters:
-    subject (str): Parameter for the MCP tool
-    
-    Returns:
-    str: Result from the MCP server
-    """
-    try:
-        from fastmcp import Client
-        import asyncio
-        
-        async def _get_email_body():
-            client = Client("http://localhost:8000/mcp")
-            async with client:
-                result = await client.call_tool("get_email_body", {"subject": subject})
-                return str(result)
-        
-        # Handle both cases: running in event loop (like Streamlit) and standalone
-        try:
-            # Try to get the current running loop
-            loop = asyncio.get_running_loop()
-            # If we're in a running loop, we need to use a different approach
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(asyncio.run, _get_email_body())
-                return future.result()
-        except RuntimeError:
-            # No running loop, we can use asyncio.run() safely
-            return asyncio.run(_get_email_body())
-    except Exception as e:
-        return f"Error calling MCP tool 'get_email_body': {str(e)}"
-
-# MCP Tool: get_recent_emails_summary
-# Server URL: http://localhost:8000/mcp
-# Description: Reads the simulated email inbox (email_inbox.csv) and returns a list of summaries (sender and subject) for all emails. Returns an error string if the inbox file is not found.
 
 @function_tool
 def get_recent_emails_summary() -> str:
     """
-    Reads the simulated email inbox (email_inbox.csv) and returns a list of summaries (sender and subject) for all emails. Returns an error string if the inbox file is not found.
+    Reads the simulated email inbox (email_inbox.csv) and returns a list of summaries      (sender and subject) for all emails. Returns an error string if the inbox file is not found.
     
     Parameters:
 
@@ -134,7 +57,7 @@ def get_recent_emails_summary() -> str:
         import asyncio
         
         async def _get_recent_emails_summary():
-            client = Client("http://localhost:8000/mcp")
+            client = Client("http://localhost:8000/mcp/")
             async with client:
                 result = await client.call_tool("get_recent_emails_summary", {})
                 return str(result)
@@ -154,14 +77,10 @@ def get_recent_emails_summary() -> str:
     except Exception as e:
         return f"Error calling MCP tool 'get_recent_emails_summary': {str(e)}"
 
-# MCP Tool: send_email_tool
-# Server URL: http://localhost:8000/mcp
-# Description: Sends an email with the provided details. Requires recipient_email, subject_line, and body_content. attachment_file_path is optional. Returns a status message indicating success or failure. Ensure GMAIL_USERNAME and GMAIL_PASSWORD environment variables are set for this tool to function.
-
 @function_tool
 def send_email_tool(recipient_email: str, subject_line: str, body_content: str, attachment_file_path: str = None) -> str:
     """
-    Sends an email with the provided details. Requires recipient_email, subject_line, and body_content. attachment_file_path is optional. Returns a status message indicating success or failure. Ensure GMAIL_USERNAME and GMAIL_PASSWORD environment variables are set for this tool to function.
+    Sends an email with the provided details.      Requires recipient_email, subject_line, and body_content.      attachment_file_path is optional.      Returns a status message indicating success or failure.     Ensure GMAIL_USERNAME and GMAIL_PASSWORD environment variables are set for this tool to function.
     
     Parameters:
     recipient_email (str): Parameter for the MCP tool
@@ -177,7 +96,7 @@ def send_email_tool(recipient_email: str, subject_line: str, body_content: str, 
         import asyncio
         
         async def _send_email_tool():
-            client = Client("http://localhost:8000/mcp")
+            client = Client("http://localhost:8000/mcp/")
             async with client:
                 params = {"recipient_email": recipient_email, "subject_line": subject_line, "body_content": body_content}
                 if attachment_file_path:
@@ -202,23 +121,27 @@ def send_email_tool(recipient_email: str, subject_line: str, body_content: str, 
 
 mcp_email_server_agent = Agent(
     name="MCP Email Server",
-    instructions="**MCP Server Tools Instructions** 1. **What the Tool Group Does:** The MCP Server Tools facilitate email management, allowing you to send emails, retrieve recent email summaries, and fetch the body of specific emails from a simulated inbox. 2. **When to Use It:** Use this tool group when you need to communicate via email, review incoming messages, or extract detailed content from specific emails in your simulated inbox. 3. **How the Tools Work Together:** - Start by using **get_recent_emails_summary** to check your inbox for new messages. This tool provides a quick overview (sender and subject) of recent emails. - If you need more details, utilize **get_email_body** with a specific subject to retrieve the content of an email. - Finally, when you want to send a response or new communication, employ **send_email_tool**. Ensure you provide the recipient\'s email, subject, and body content, and confirm that your Gmail credentials are set up correctly. These tools collectively streamline email interactions and management.",
+    instructions="""**MCP Server Tools Instructions**
+
+1. **What the Tool Group Does:**  
+   The MCP Server Tools facilitate email management, allowing you to send emails, retrieve recent email summaries, and fetch the body of specific emails from a simulated inbox.
+
+2. **When to Use It:**  
+   Use this tool group when you need to communicate via email, review incoming messages, or extract detailed content from specific emails in your simulated inbox.
+
+3. **How the Tools Work Together:**  
+   - Start by using **get_recent_emails_summary** to check your inbox for new messages. This tool provides a quick overview (sender and subject) of recent emails.
+   - If you need more details, utilize **get_email_body** with a specific subject to retrieve the content of an email.
+   - Finally, when you want to send a response or new communication, employ **send_email_tool**. Ensure you provide the recipient's email, subject, and body content, and confirm that your Gmail credentials are set up correctly. 
+
+These tools collectively streamline email interactions and management.""",
     tools=[get_email_body, get_recent_emails_summary, send_email_tool]
 )
 
-
 # List of directly usable tool objects to be imported by the main agent file
 external_tools = [
-    file_reader_specialist_agent.as_tool(
-        tool_name="get_file_reader_specialist_from_specialist_agent",
-        tool_description="Call this tool for tasks related to file reader specialist."
-    ),
-    get_email_body_agent.as_tool(
-        tool_name="get_get_email_body_from_specialist_agent",
-        tool_description="Call this tool for tasks related to get_email_body."
-    ),
     mcp_email_server_agent.as_tool(
         tool_name="get_mcp_email_server_from_specialist_agent",
-        tool_description="Call this tool for tasks related to mcp email server."
+        tool_description="Call this tool for tasks related to mcp_email_server."
     )
 ]

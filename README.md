@@ -5,14 +5,30 @@ A sophisticated **AI Agent Tool Management System** that enables dynamic creatio
 ## 🚀 Quick Start
 
 ```bash
-# Start the web management interface
+# Option 1: Start all servers with batch file (Windows)
+start_servers.bat
+
+# Option 2: Start servers manually
+# 1. Start the web management interface
 npm start
 # Access at: http://localhost:3000
 
-# Start the AI chat interface
+# 2. Start the FastAPI server
+pip install -r requirements_api.txt
+python -m uvicorn api_server:app --port 8080 --reload
+# Access at: http://localhost:8080
+
+# 3. Start the AI chat interface
+pip install -r requirements.txt
 streamlit run agent.py
 # Access at: http://localhost:8501
 ```
+
+### API Integration
+- 🔑 **API Credentials**: Each user gets automatic API key/secret generation
+- 🔄 **External Tools API**: Fetch user-specific tools via REST API (no user ID required)
+- 💻 **Streamlit Integration**: Pull tools directly with just API key/secret
+- 🛡️ **Automatic User Detection**: Server identifies user from credentials alone
 
 ## 📋 Table of Contents
 
@@ -523,6 +539,28 @@ CMD ["streamlit", "run", "agent.py", "--server.port=8501", "--server.address=0.0
 - **📚 Knowledge Sharing**: Tool groups capture workflows
 - **🔄 Reusability**: Tools can be reused across projects
 - **📈 Scalability**: Add new capabilities without code changes
+
+---
+
+## 🚀 Quick Usage Guide
+
+### Using the API Integration (Simplified)
+
+1. **Start the servers**: Run `start_servers.bat` or start manually
+2. **Create a user**: Go to http://localhost:3000/users and create a new user
+3. **Get credentials**: Copy the displayed API key and secret from the user page
+4. **Enable tools**: Select the user and enable some tools/tool groups
+5. **Use in Streamlit**: 
+   - Open http://localhost:8501
+   - Enter **only** your API key and secret in the sidebar
+   - Click "Fetch My External Tools" (no user ID needed!)
+   - Restart Streamlit to load new tools
+
+### Key Improvements
+- ✅ **No User ID required**: Server automatically identifies user from credentials
+- ✅ **Simplified interface**: Just API key + secret
+- ✅ **Secure**: Each user can only access their own tools
+- ✅ **One-click fetch**: Update tools with a single button
 
 ---
 

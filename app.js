@@ -52,12 +52,5 @@ seedDatabase(db);
 // === Start Server ===
 app.listen(port, () => {
   console.log(`🚀 Ally Agent Demo server running at http://localhost:${port}`);
-  console.log('📁 Modules loaded:');
-  console.log('   - Database: SQLite with schema initialized');
-  console.log('   - Middleware: Session, parsing, static files configured');
-  console.log('   - Routes: Tools, Tool Groups, MCP Server, Users');
-  console.log('   - Services: OpenAI, External Tools Generator');
-  console.log('   - Utils: Seed data loaded');
-  console.log('');
-  console.log('✅ Refactored architecture: 1319 lines → ~50 lines + 8 modules');
+
 }); 

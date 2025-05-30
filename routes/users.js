@@ -5,6 +5,7 @@
  */
 
 import express from 'express';
+import crypto from 'crypto';
 
 const router = express.Router();
 
@@ -18,8 +19,13 @@ export function configureUsersRoutes(db) {
    */
   router.get('/users', (req, res) => {
     try {
-      // Fetch all users
-      const usersStmt = db.prepare('SELECT id, name, created_at FROM users ORDER BY name ASC');
+      // Fetch all users with their API credentials
+      const usersStmt = db.prepare(`
+        SELECT u.id, u.name, u.created_at, c.api_key, c.api_secret
+        FROM users u
+        LEFT JOIN user_api_credentials c ON u.id = c.user_id
+        ORDER BY u.name ASC
+      `);
       const users = usersStmt.all();
 
       // Get current user from session
@@ -97,10 +103,23 @@ export function configureUsersRoutes(db) {
     }
 
     try {
-      const stmt = db.prepare('INSERT INTO users (name) VALUES (?)');
-      const result = stmt.run(userName.trim());
+      db.transaction(() => {
+        // Create user
+        const stmt = db.prepare('INSERT INTO users (name) VALUES (?)');
+        const result = stmt.run(userName.trim());
+        const userId = result.lastInsertRowid;
+        
+        // Generate API credentials
+        const apiKey = 'ak_' + crypto.randomBytes(16).toString('hex');
+        const apiSecret = 'as_' + crypto.randomBytes(32).toString('hex');
+        
+        // Store API credentials
+        const credStmt = db.prepare('INSERT INTO user_api_credentials (user_id, api_key, api_secret) VALUES (?, ?, ?)');
+        credStmt.run(userId, apiKey, apiSecret);
+        
+        console.log(`New user "${userName}" created with ID ${userId} and API credentials generated`);
+      })();
       
-      console.log(`New user "${userName}" created with ID ${result.lastInsertRowid}`);
       res.redirect('/users');
     } catch (error) {
       if (error.message.includes('UNIQUE constraint failed')) {

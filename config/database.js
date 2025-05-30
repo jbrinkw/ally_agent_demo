@@ -24,7 +24,7 @@ if (!fs.existsSync(dbDir)) {
 const db = new Database(path.join(dbDir, 'tools.db'));
 
 // Create database schema
-function initializeSchema() {
+async function initializeSchema() {
   // Create the 'users' table
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -92,6 +92,19 @@ function initializeSchema() {
     )
   `);
 
+  // Create user API credentials table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_api_credentials (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      api_key TEXT UNIQUE NOT NULL,
+      api_secret TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(user_id)
+    )
+  `);
+
   // Create a default user if none exists
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
   if (userCount.count === 0) {
@@ -99,10 +112,30 @@ function initializeSchema() {
     console.log('Created default user with ID:', defaultUser.lastInsertRowid);
   }
 
+  // Generate API credentials for users who don't have them
+  const usersWithoutCreds = db.prepare(`
+    SELECT u.id, u.name 
+    FROM users u 
+    LEFT JOIN user_api_credentials c ON u.id = c.user_id 
+    WHERE c.user_id IS NULL
+  `).all();
+
+  if (usersWithoutCreds.length > 0) {
+    const crypto = await import('crypto');
+    const insertCredStmt = db.prepare('INSERT INTO user_api_credentials (user_id, api_key, api_secret) VALUES (?, ?, ?)');
+    
+    usersWithoutCreds.forEach(user => {
+      const apiKey = 'ak_' + crypto.randomBytes(16).toString('hex');
+      const apiSecret = 'as_' + crypto.randomBytes(32).toString('hex');
+      insertCredStmt.run(user.id, apiKey, apiSecret);
+      console.log(`Generated API credentials for user "${user.name}" (ID: ${user.id})`);
+    });
+  }
+
   console.log('Database schema initialized successfully with user management');
 }
 
 // Initialize the schema
-initializeSchema();
+await initializeSchema();
 
 export default db; 

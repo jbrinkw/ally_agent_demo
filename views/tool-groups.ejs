@@ -5,32 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
     <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #ddd;
-        }
-        .user-badge {
-            background-color: #e3f2fd;
-            color: #1976d2;
-            padding: 6px 12px;
-            border-radius: 16px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .user-badge.no-user {
-            background-color: #fff3e0;
-            color: #f57c00;
-        }
-        .current-user {
-            display: flex;
-            align-items: center;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -48,11 +22,11 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
             <h2><%= title %></h2>
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div class="actions-bar">
                 <span class="enabled-counter">Enabled: <%= totalEnabledCount %> (<%= enabledToolsCount %> tools, <%= enabledToolGroupsCount %> groups)</span>
-                <form action="/tools/update-external" method="POST" style="display: inline;">
+                <form action="/tools/update-external" method="POST">
                     <% if (totalEnabledCount > 0) { %>
-                        <button type="submit" class="button button-success" style="background-color: #28a745;">
+                        <button type="submit" class="button button-success">
                             Update External Tools
                         </button>
                     <% } else { %>
@@ -61,18 +35,18 @@
                         </button>
                     <% } %>
                 </form>
-                <a href="/users" class="button button-info" style="background-color: #17a2b8;">👥 Users</a>
-                <a href="/" class="button button-secondary">🏠 Back to Tools</a>
+                <a href="/users" class="button button-info">👥 Users</a>
+                <a href="/tool-groups" class="button button-secondary">📦 Tool Groups</a>
+                <a href="/import-mcp-server" class="button button-info">Import MCP Server</a>
             </div>
         </div>
         
         <div style="margin-bottom: 20px;">
             <a href="/new-tool-group" class="button button-primary">Create New Tool Group</a>
-            <a href="/import-mcp-server" class="button button-info" style="background-color: #17a2b8; margin-left: 10px;">Import MCP Server</a>
         </div>
 
-        <% if (typeof successMessage !== 'undefined' && successMessage) { %>
-            <div class="success-message" style="background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 4px; padding: 12px; margin-bottom: 20px;">
+        <% if (successMessage) { %>
+            <div class="success-message">
                 <%= successMessage %>
             </div>
         <% } %>
@@ -83,21 +57,21 @@
                     <li class="tool-item">
                         <h2><a href="/tool-group/<%= group.id %>"><%= group.name %></a></h2>
                         <p class="description-preview"><%= group.preview %></p>
-                        <p style="color: #666; font-size: 0.9em; margin-bottom: 0;">
+                        <p class="description-preview">
                             <strong><%= group.tool_count %></strong> tool<%= group.tool_count === 1 ? '' : 's' %> in this group
                         </p>
-                        <div class="actions-bar" style="margin-top: 10px; border-top: none; padding-top: 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <div class="actions-bar">
                             <% if (group.isEnabled) { %>
-                                <form action="/tool-groups/toggle/<%= group.id %>" method="POST" style="display: inline;">
-                                    <button type="submit" class="button button-success" style="background-color: #28a745;">✓ Enabled</button>
+                                <form action="/tool-groups/toggle/<%= group.id %>" method="POST">
+                                    <button type="submit" class="button button-success">✓ Enabled</button>
                                 </form>
                             <% } else { %>
-                                <form action="/tool-groups/toggle/<%= group.id %>" method="POST" style="display: inline;">
+                                <form action="/tool-groups/toggle/<%= group.id %>" method="POST">
                                     <button type="submit" class="button button-secondary">Enable Group</button>
                                 </form>
                             <% } %>
                             <a href="/edit-tool-group/<%= group.id %>" class="button button-warning">Edit Group</a>
-                            <form action="/delete-tool-group/<%= group.id %>" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this tool group?');">
+                            <form action="/delete-tool-group/<%= group.id %>" method="POST" onsubmit="return confirm('Are you sure you want to delete this tool group?');">
                                 <button type="submit" class="button button-danger">Delete Group</button>
                             </form>
                         </div>
