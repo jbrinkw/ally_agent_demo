@@ -1,14 +1,15 @@
 """
-Ally Agent Demo - Streamlit Chat Interface
+Ally Agent Demo - Streamlit Chat Interface with OAuth 2.0
 
 This is the main chat interface for interacting with the AI agent and its tools.
 It imports tools from both internal_tool_agents.py (built-in tools) and 
-external_tool_agents.py (generated from web UI) and creates a unified chat experience.
+external_tool_agents.py (generated from OAuth 2.0 protected API) and creates a unified chat experience.
 
 Run with: streamlit run agent.py
 Access at: http://localhost:8501
 
 The agent will automatically select appropriate tools based on user requests.
+OAuth 2.0 authentication is used to fetch user-specific external tools.
 """
 
 import os
@@ -20,7 +21,7 @@ import asyncio
 # === TOOL IMPORTS ===
 # This section imports tools from both internal and external sources
 
-# Attempt to import external tools (now only random number)
+# Attempt to import external tools
 external_tools = [] # Default to empty list
 try:
     from external_tool_agents import external_tools as ext_tools_list
@@ -75,7 +76,7 @@ assistant_agent = Agent(
     name="Assistant",
     instructions=assistant_agent_instructions,
     tools=all_assistant_tools, 
-    model="gpt-4.1-mini"
+    model="gpt-4o-mini"
 )
 # --- End of Agent Definitions ---
 
@@ -85,63 +86,123 @@ if not OPENAI_API_KEY:
     st.stop()
 
 # Streamlit App
-st.title("Chat with My Multi-Tool Agent")
+st.title("🤖 Chat with My Multi-Tool Agent")
+st.caption("Powered by OAuth 2.0 authentication")
 
-# Sidebar for API credentials and external tools fetching
+# Sidebar for OAuth 2.0 credentials and external tools fetching
 with st.sidebar:
-    st.header("🔑 API Integration")
-    st.write("Fetch external tools from your user account")
+    st.header("🔐 OAuth 2.0 Integration")
+    st.write("Fetch external tools using OAuth 2.0")
     
-    # API credentials input
-    api_key = st.text_input("API Key", type="password", placeholder="ak_...")
-    api_secret = st.text_input("API Secret", type="password", placeholder="as_...")
+    # OAuth credentials input
+    client_id = st.text_input("OAuth Client ID", placeholder="ally_agent_user_1", help="Your OAuth client ID from the user management page")
+    client_secret = st.text_input("OAuth Client Secret", type="password", placeholder="Enter your client secret", help="Your OAuth client secret from the user management page")
     
-    # Fetch button
-    if st.button("🔄 Fetch My External Tools", type="primary"):
-        if api_key and api_secret:
-            try:
-                import requests
-                from requests.auth import HTTPBasicAuth
-                
-                # Make API request to /me endpoint (no user_id needed)
-                response = requests.get(
-                    "http://localhost:8080/api/users/me",
-                    auth=HTTPBasicAuth(api_key, api_secret),
-                    timeout=10
-                )
-                
-                if response.status_code == 200:
+    # Token management section
+    if "oauth_token" in st.session_state and "token_expires_at" in st.session_state:
+        import time
+        if time.time() < st.session_state.token_expires_at:
+            st.success("✅ Valid OAuth token")
+            expires_in = int(st.session_state.token_expires_at - time.time())
+            st.caption(f"Token expires in {expires_in // 60}m {expires_in % 60}s")
+        else:
+            st.warning("⚠️ OAuth token expired")
+            if st.button("🔄 Refresh Token"):
+                if "oauth_client" in st.session_state:
+                    del st.session_state.oauth_client
+                if "oauth_token" in st.session_state:
+                    del st.session_state.oauth_token
+                if "token_expires_at" in st.session_state:
+                    del st.session_state.token_expires_at
+                st.rerun()
+    
+    # Authentication and fetch button
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("🔑 Authenticate", type="primary", help="Get OAuth access token"):
+            if client_id and client_secret:
+                try:
+                    from oauth_client import OAuth2Client
+                    import time
+                    
+                    # Create OAuth client
+                    oauth_client = OAuth2Client(client_id, client_secret)
+                    
+                    # Perform client credentials flow
+                    with st.spinner("Authenticating with OAuth 2.0..."):
+                        token_response = oauth_client.client_credentials_flow()
+                    
+                    # Store in session state
+                    st.session_state.oauth_client = oauth_client
+                    st.session_state.oauth_token = token_response["access_token"]
+                    st.session_state.token_expires_at = time.time() + token_response.get("expires_in", 1800)
+                    
+                    st.success("✅ OAuth authentication successful!")
+                    st.info("Now you can fetch your external tools.")
+                    
+                except Exception as e:
+                    st.error(f"❌ OAuth authentication failed: {str(e)}")
+            else:
+                st.warning("⚠️ Please enter both Client ID and Client Secret")
+    
+    with col2:
+        if st.button("📥 Fetch Tools", help="Download external tools using OAuth token"):
+            if "oauth_client" in st.session_state and st.session_state.oauth_client.is_token_valid():
+                try:
+                    with st.spinner("Fetching external tools..."):
+                        tools_content = st.session_state.oauth_client.get_external_tools()
+                    
                     # Save the external tools file
                     with open("external_tool_agents.py", "w") as f:
-                        f.write(response.text)
+                        f.write(tools_content)
                     
-                    st.success("✅ External tools file updated successfully!")
-                    st.info("Please restart the Streamlit app to load the new tools.")
+                    st.success("✅ External tools updated successfully!")
+                    st.info("Please restart the app to load new tools.")
                     
-                elif response.status_code == 401:
-                    st.error("❌ Authentication failed. Please check your API credentials.")
-                elif response.status_code == 403:
-                    st.error("❌ Access denied. You can only access your own tools.")
-                else:
-                    st.error(f"❌ Error fetching tools: {response.status_code}")
+                    # Show preview of tools
+                    with st.expander("📄 Preview of fetched tools"):
+                        st.code(tools_content[:500] + "..." if len(tools_content) > 500 else tools_content, language="python")
                     
-            except requests.exceptions.ConnectionError:
-                st.error("❌ Could not connect to API server. Make sure it's running on port 8080.")
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
-        else:
-            st.warning("⚠️ Please enter both API Key and API Secret")
+                except Exception as e:
+                    st.error(f"❌ Error fetching tools: {str(e)}")
+            else:
+                st.warning("⚠️ Please authenticate first or token has expired")
     
     st.markdown("---")
-    st.caption("💡 Get your API credentials from the User Management page")
+    
+    # OAuth client information section
+    if client_id and client_secret:
+        with st.expander("🔍 OAuth Client Info"):
+            st.caption("**Client ID:** " + client_id)
+            st.caption("**Authorization Server:** http://localhost:8080")
+            st.caption("**Grant Type:** Client Credentials")
+            st.caption("**Scope:** read:tools")
+            
+            if st.button("🔍 Introspect Token", help="Check token validity and claims"):
+                if "oauth_client" in st.session_state:
+                    try:
+                        introspection = st.session_state.oauth_client.introspect_token()
+                        st.json(introspection)
+                    except Exception as e:
+                        st.error(f"Token introspection failed: {str(e)}")
+                else:
+                    st.warning("No active OAuth client")
+    
+    st.markdown("---")
+    st.caption("💡 Get your OAuth credentials from the User Management page")
+    st.caption("🔧 Make sure the OAuth server is running on port 8080")
 
+# Main chat interface
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Display existing messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+# Chat input
 if prompt := st.chat_input("What would you like to ask?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -166,6 +227,18 @@ if prompt := st.chat_input("What would you like to ask?"):
             message_placeholder.error(full_response)
         
     st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+# Footer with OAuth status
+st.markdown("---")
+st.caption("🔐 **Authentication Status:**")
+if "oauth_token" in st.session_state:
+    import time
+    if time.time() < st.session_state.get("token_expires_at", 0):
+        st.caption("✅ Authenticated with OAuth 2.0")
+    else:
+        st.caption("⚠️ OAuth token expired - please re-authenticate")
+else:
+    st.caption("❌ Not authenticated - external tools unavailable")
 
 # To run the Streamlit app, save this file (e.g., agent.py) 
 # and then run `streamlit run agent.py` in your terminal.

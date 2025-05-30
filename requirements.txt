@@ -3,3 +3,8 @@ python-dotenv
 openai-agents
 requests
 yfinance 
+fastapi
+uvicorn[standard]
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart

@@ -8,6 +8,8 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 // Setup for ES Modules __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -92,7 +94,7 @@ async function initializeSchema() {
     )
   `);
 
-  // Create user API credentials table
+  // Create user API credentials table (legacy)
   db.exec(`
     CREATE TABLE IF NOT EXISTS user_api_credentials (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,6 +107,52 @@ async function initializeSchema() {
     )
   `);
 
+  // Create OAuth 2.0 tables
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS oauth_clients (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id TEXT NOT NULL UNIQUE,
+      client_secret_hash TEXT NOT NULL,
+      client_name TEXT NOT NULL,
+      redirect_uris TEXT,
+      grant_types TEXT DEFAULT 'authorization_code,client_credentials',
+      user_id INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS oauth_authorization_codes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT NOT NULL UNIQUE,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL,
+      redirect_uri TEXT,
+      scope TEXT,
+      expires_at DATETIME NOT NULL,
+      used BOOLEAN DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (client_id) REFERENCES oauth_clients(client_id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS oauth_access_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      token_hash TEXT NOT NULL UNIQUE,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL,
+      scope TEXT,
+      expires_at DATETIME NOT NULL,
+      revoked BOOLEAN DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (client_id) REFERENCES oauth_clients(client_id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
   // Create a default user if none exists
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
   if (userCount.count === 0) {
@@ -112,7 +160,7 @@ async function initializeSchema() {
     console.log('Created default user with ID:', defaultUser.lastInsertRowid);
   }
 
-  // Generate API credentials for users who don't have them
+  // Generate API credentials for users who don't have them (legacy support)
   const usersWithoutCreds = db.prepare(`
     SELECT u.id, u.name 
     FROM users u 
@@ -121,18 +169,55 @@ async function initializeSchema() {
   `).all();
 
   if (usersWithoutCreds.length > 0) {
-    const crypto = await import('crypto');
     const insertCredStmt = db.prepare('INSERT INTO user_api_credentials (user_id, api_key, api_secret) VALUES (?, ?, ?)');
     
     usersWithoutCreds.forEach(user => {
       const apiKey = 'ak_' + crypto.randomBytes(16).toString('hex');
       const apiSecret = 'as_' + crypto.randomBytes(32).toString('hex');
       insertCredStmt.run(user.id, apiKey, apiSecret);
-      console.log(`Generated API credentials for user "${user.name}" (ID: ${user.id})`);
+      console.log(`Generated legacy API credentials for user "${user.name}" (ID: ${user.id})`);
     });
   }
 
-  console.log('Database schema initialized successfully with user management');
+  // Generate OAuth clients for users who don't have them
+  const usersWithoutOAuth = db.prepare(`
+    SELECT u.id, u.name 
+    FROM users u 
+    LEFT JOIN oauth_clients oc ON u.id = oc.user_id 
+    WHERE oc.user_id IS NULL
+  `).all();
+
+  if (usersWithoutOAuth.length > 0) {
+    const insertOAuthStmt = db.prepare(`
+      INSERT INTO oauth_clients (client_id, client_secret_hash, client_name, user_id, redirect_uris, grant_types) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    
+    for (const user of usersWithoutOAuth) {
+      const clientId = `ally_agent_user_${user.id}`;
+      const clientSecret = crypto.randomBytes(32).toString('base64url');
+      const clientSecretHash = await bcrypt.hash(clientSecret, 10);
+      const clientName = `${user.name} OAuth Client`;
+      const redirectUris = JSON.stringify([
+        "http://localhost:8501/oauth/callback",
+        "urn:ietf:wg:oauth:2.0:oob"
+      ]);
+      
+      insertOAuthStmt.run(
+        clientId, 
+        clientSecretHash, 
+        clientName, 
+        user.id, 
+        redirectUris,
+        'authorization_code,client_credentials'
+      );
+      
+      console.log(`Generated OAuth client for user "${user.name}" (ID: ${user.id}): ${clientId}`);
+      console.log(`  Client Secret: ${clientSecret} (store this securely - shown once)`);
+    }
+  }
+
+  console.log('Database schema initialized successfully with user management and OAuth 2.0');
 }
 
 // Initialize the schema
